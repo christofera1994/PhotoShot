@@ -1,6 +1,26 @@
 // Main application JavaScript
 
 document.addEventListener('DOMContentLoaded', function () {
+  // Initialize AOS
+  if (typeof AOS !== 'undefined') {
+    AOS.init({
+      duration: 1200,
+      once: false,
+      mirror: true,
+      offset: 50
+    });
+  }
+
+  // Navbar scroll effect
+  window.addEventListener('scroll', function() {
+    const header = document.getElementById('header');
+    if (window.scrollY > 50) {
+      header.classList.add('scrolled');
+    } else {
+      header.classList.remove('scrolled');
+    }
+  });
+
   // Initialize Swiper for testimonials
   initTestimonialSwiper();
 
@@ -19,8 +39,11 @@ function initTestimonialSwiper() {
   if (document.querySelector('.testimonial-swiper')) {
     new Swiper(".testimonial-swiper", {
       slidesPerView: 1,
-      spaceBetween: 30,
-      freeMode: true,
+      spaceBetween: 50,
+      loop: true,
+      autoplay: {
+        delay: 5000,
+      },
       navigation: {
         nextEl: ".swiper-button-next",
         prevEl: ".swiper-button-prev",
@@ -43,31 +66,36 @@ async function loadServices() {
 
     if (services && services.length > 0) {
       container.innerHTML = '';
-      services.forEach(service => {
-        const serviceCard = createServiceCard(service);
+      services.forEach((service, index) => {
+        const serviceCard = createServiceCard(service, index);
         container.appendChild(serviceCard);
       });
+      AOS.refresh();
     } else {
       container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No services available yet.</p></div>';
     }
   } catch (error) {
     console.error('Error loading services:', error);
-    container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Error loading services. Please try again later.</p></div>';
+    container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Error loading services.</p></div>';
   }
 }
 
 // Create service card HTML
-function createServiceCard(service) {
+function createServiceCard(service, index) {
   const col = document.createElement('div');
-  col.className = 'col-md-6 col-lg-4 mb-3';
+  col.className = 'col-md-6 col-lg-4';
+  col.setAttribute('data-aos', 'fade-up');
+  col.setAttribute('data-aos-delay', (index * 100).toString());
 
   col.innerHTML = `
-    <div class="card">
-      <img src="${service.image_url || 'images/placeholder.jpg'}" class="card-img-top rounded-4" alt="${service.title}" style="height: 250px; object-fit: cover;">
-      <div class="card-body p-0">
-        <h3 class="pt-4">${service.price || 'Contact for pricing'}</h3>
-        <h4 class="card-title">${service.title}</h4>
-        <p class="card-text">${service.description || ''}</p>
+    <div class="service-card">
+      <div class="service-image-wrapper">
+        <img src="${service.image_url || 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?w=800'}" class="img-fluid w-100" alt="${service.title}" style="height: 400px; object-fit: cover;">
+      </div>
+      <div class="service-details">
+        <span class="text-accent fw-bold text-uppercase small ls-2">${service.price || 'Bespoke'}</span>
+        <h3 class="mt-2 h4">${service.title}</h3>
+        <p class="mt-3 text-muted small">${service.description || ''}</p>
       </div>
     </div>
   `;
@@ -85,43 +113,50 @@ async function loadGallery() {
 
     if (gallery && gallery.length > 0) {
       container.innerHTML = '';
-      gallery.forEach(item => {
-        const galleryItem = createGalleryItem(item);
+      gallery.forEach((item, index) => {
+        const galleryItem = createGalleryItem(item, index);
         container.appendChild(galleryItem);
       });
+      AOS.refresh();
     } else {
       container.innerHTML = '<div class="col-12 text-center"><p class="text-muted">No gallery images available yet.</p></div>';
     }
   } catch (error) {
     console.error('Error loading gallery:', error);
-    container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Error loading gallery. Please try again later.</p></div>';
+    container.innerHTML = '<div class="col-12 text-center"><p class="text-danger">Error loading gallery.</p></div>';
   }
 }
 
 // Create gallery item HTML
-function createGalleryItem(item) {
+function createGalleryItem(item, index) {
   const col = document.createElement('div');
-  col.className = 'col-md-6 col-lg-4 mb-3';
+  col.className = 'col-md-4 col-6';
+  col.setAttribute('data-aos', 'zoom-in');
+  col.setAttribute('data-aos-delay', (index * 50).toString());
 
   col.innerHTML = `
-    <div class="card">
-      <img src="${item.image_url}" class="card-img-top rounded-4" alt="Gallery Image" style="height: 300px; object-fit: cover; cursor: pointer;" onclick="openImageModal('${item.image_url}')">
+    <div class="gallery-grid-item" onclick="openImageModal('${item.image_url}')">
+      <img src="${item.image_url}" class="img-fluid w-100" alt="Gallery Image" style="height: 450px; object-fit: cover;">
+      <div class="gallery-overlay">
+        <div class="text-white text-center">
+          <i class="bi bi-plus-lg display-4 text-accent"></i>
+        </div>
+      </div>
     </div>
   `;
 
   return col;
 }
 
-// Open image in modal (simple implementation)
+// Open image in modal
 function openImageModal(imageUrl) {
-  // Create modal overlay
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: pointer;';
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; animation: fadeIn 0.3s ease;';
   overlay.onclick = () => overlay.remove();
 
   const img = document.createElement('img');
   img.src = imageUrl;
-  img.style.cssText = 'max-width: 90%; max-height: 90%; object-fit: contain;';
+  img.style.cssText = 'max-width: 90%; max-height: 90%; object-fit: contain; box-shadow: 0 0 50px rgba(0,0,0,0.5);';
 
   overlay.appendChild(img);
   document.body.appendChild(overlay);
@@ -140,9 +175,9 @@ function handleContactForm() {
     const message = document.getElementById('contactMessage').value;
     const messageDiv = document.getElementById('contactFormMessage');
 
-    // Disable submit button
     const submitBtn = form.querySelector('button[type="submit"]');
     submitBtn.disabled = true;
+    const originalText = submitBtn.textContent;
     submitBtn.textContent = 'Sending...';
 
     try {
@@ -152,14 +187,14 @@ function handleContactForm() {
         message: message
       });
 
-      messageDiv.innerHTML = '<div class="alert alert-success">Thank you! Your message has been sent successfully.</div>';
+      messageDiv.innerHTML = '<div class="alert alert-success bg-transparent text-accent border-accent">Message sent. We will contact you soon.</div>';
       form.reset();
     } catch (error) {
       console.error('Error submitting contact form:', error);
-      messageDiv.innerHTML = '<div class="alert alert-danger">Error sending message. Please try again later.</div>';
+      messageDiv.innerHTML = '<div class="alert alert-danger bg-transparent text-danger border-danger">Error sending message.</div>';
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Send Message';
+      submitBtn.textContent = originalText;
     }
   });
 }
